@@ -1,8 +1,14 @@
 const express = require('express');
 const path = require('path');
+const session = require('express-session');
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'dev-secret',
+  resave: false,
+  saveUninitialized: false,
+}));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -14,6 +20,15 @@ let nextId = 1;
 const uatItems = [];
 let nextUatId = 1;
 const UAT_STATUSES = ['Not Started', 'In Progress', 'Passed', 'Failed', 'Blocked'];
+
+const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin';
+
+function requireAuth(req, res, next) {
+  if (req.session && req.session.user) return next();
+  const nextParam = encodeURIComponent(req.originalUrl || '/');
+  return res.redirect(`/login?next=${nextParam}`);
+}
 
 function toCsv(rows) {
   const headers = ['id', 'category', 'title', 'description', 'owner', 'status', 'due_date', 'created_at'];
@@ -49,15 +64,35 @@ function toUatCsv(rows) {
   return lines.join('\n');
 }
 
-app.get('/', (req, res) => {
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === ADMIN_USER && password === ADMIN_PASSWORD) {
+    req.session.user = username;
+    const nextUrl = req.query.next || '/';
+    return res.redirect(nextUrl);
+  }
+  return res.render('login');
+});
+
+app.post('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/login');
+  });
+});
+
+app.get('/', requireAuth, (req, res) => {
   const grouped = {};
   for (const c of CATEGORIES) {
     grouped[c] = entries.filter((e) => e.category === c);
   }
-  res.render('index', { categories: CATEGORIES, grouped, uatItems, uatStatuses: UAT_STATUSES });
+  res.render('index', { categories: CATEGORIES, grouped, uatItems, uatStatuses: UAT_STATUSES, currentUser: req.session.user });
 });
 
-app.post('/add', (req, res) => {
+app.post('/add', requireAuth, (req, res) => {
   const { category, title, description, owner, status, due_date } = req.body;
   if (!CATEGORIES.includes(category) || !title) return res.redirect('/');
   entries.push({
@@ -73,14 +108,14 @@ app.post('/add', (req, res) => {
   res.redirect('/');
 });
 
-app.get('/export', (req, res) => {
+app.get('/export', requireAuth, (req, res) => {
   const csv = toCsv(entries);
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename=raid_log.csv');
   res.send(csv);
 });
 
-app.post('/uat/add', (req, res) => {
+app.post('/uat/add', requireAuth, (req, res) => {
   const { title, owner, status, due_date, notes } = req.body;
   if (!title) return res.redirect('/');
   uatItems.push({
@@ -95,7 +130,7 @@ app.post('/uat/add', (req, res) => {
   res.redirect('/');
 });
 
-app.get('/uat/export', (req, res) => {
+app.get('/uat/export', requireAuth, (req, res) => {
   const csv = toUatCsv(uatItems);
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename=uat_checklist.csv');

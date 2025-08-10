@@ -13,7 +13,13 @@
   </style>
 </head>
 <body>
-  <h1>RAID Log</h1>
+  <div style="display:flex; justify-content: space-between; align-items:center;">
+    <h1>RAID Log</h1>
+    <form method="post" action="/logout">
+      <span>Signed in as <%= currentUser %></span>
+      <button type="submit">Logout</button>
+    </form>
+  </div>
 
   <p>
     <a href="/export">Export RAID CSV</a>
