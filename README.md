@@ -6,7 +6,8 @@ Minimal RAID log web apps in Python (Flask) and Node.js (Express) with CSV expor
 
 - Add entries across RAID categories: Risk, Assumption, Issue, Dependency
 - List entries by category
-- Export all entries to CSV
+- Export all RAID entries to CSV
+- UAT checklist: add items, view list, export to CSV
 - In-memory storage (ephemeral). Swap in a database for persistence.
 
 ## Option A: Python Flask
@@ -27,6 +28,9 @@ python /workspace/raid-log-flask/app.py
 ```
 
 Visit `http://localhost:5000`.
+
+- RAID CSV export: `/export`
+- UAT checklist CSV export: `/uat/export`
 
 ## Option B: Node.js Express
 
@@ -55,8 +59,10 @@ PORT=5001 npm start
 
 Visit `http://localhost:5001`.
 
+- RAID CSV export: `/export`
+- UAT checklist CSV export: `/uat/export`
+
 ## Notes
 
-- CSV export is available at `/export`.
 - Data is stored in memory and will reset on restart.
-- To persist data, replace the in-memory array with a database or file-backed store.
+- To persist data, replace the in-memory arrays with a database or file-backed store.

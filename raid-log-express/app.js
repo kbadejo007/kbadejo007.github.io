@@ -10,8 +10,30 @@ const CATEGORIES = ['Risk', 'Assumption', 'Issue', 'Dependency'];
 const entries = [];
 let nextId = 1;
 
+// UAT checklist in-memory storage
+const uatItems = [];
+let nextUatId = 1;
+const UAT_STATUSES = ['Not Started', 'In Progress', 'Passed', 'Failed', 'Blocked'];
+
 function toCsv(rows) {
   const headers = ['id', 'category', 'title', 'description', 'owner', 'status', 'due_date', 'created_at'];
+  const escape = (v) => {
+    if (v == null) return '';
+    const s = String(v);
+    if (/[",\n]/.test(s)) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  };
+  const lines = [headers.join(',')];
+  for (const row of rows) {
+    lines.push(headers.map((h) => escape(row[h])).join(','));
+  }
+  return lines.join('\n');
+}
+
+function toUatCsv(rows) {
+  const headers = ['id', 'title', 'owner', 'status', 'due_date', 'notes', 'created_at'];
   const escape = (v) => {
     if (v == null) return '';
     const s = String(v);
@@ -32,7 +54,7 @@ app.get('/', (req, res) => {
   for (const c of CATEGORIES) {
     grouped[c] = entries.filter((e) => e.category === c);
   }
-  res.render('index', { categories: CATEGORIES, grouped });
+  res.render('index', { categories: CATEGORIES, grouped, uatItems, uatStatuses: UAT_STATUSES });
 });
 
 app.post('/add', (req, res) => {
@@ -55,6 +77,28 @@ app.get('/export', (req, res) => {
   const csv = toCsv(entries);
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename=raid_log.csv');
+  res.send(csv);
+});
+
+app.post('/uat/add', (req, res) => {
+  const { title, owner, status, due_date, notes } = req.body;
+  if (!title) return res.redirect('/');
+  uatItems.push({
+    id: String(nextUatId++),
+    title,
+    owner,
+    status: UAT_STATUSES.includes(status) ? status : 'Not Started',
+    due_date,
+    notes,
+    created_at: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+  });
+  res.redirect('/');
+});
+
+app.get('/uat/export', (req, res) => {
+  const csv = toUatCsv(uatItems);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename=uat_checklist.csv');
   res.send(csv);
 });
 
