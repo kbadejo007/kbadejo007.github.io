@@ -1,0 +1,17 @@
+{
+  "name": "raid-log-express",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "ejs": "^3.1.9",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

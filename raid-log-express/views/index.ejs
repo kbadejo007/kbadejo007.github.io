@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RAID Log (Express)</title>
+  <link href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" rel="stylesheet" type="text/css">
+  <style>
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f4f4f4; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  </style>
+</head>
+<body>
+  <h1>RAID Log</h1>
+
+  <p>
+    <a href="/export">Export CSV</a>
+  </p>
+
+  <h2>Add Entry</h2>
+  <form method="post" action="/add">
+    <div class="grid">
+      <label>
+        Category
+        <select name="category" required>
+          <% categories.forEach(function(c) { %>
+            <option value="<%= c %>"><%= c %></option>
+          <% }); %>
+        </select>
+      </label>
+      <label>
+        Title
+        <input type="text" name="title" placeholder="Short summary" required>
+      </label>
+      <label>
+        Owner
+        <input type="text" name="owner" placeholder="Person or team">
+      </label>
+      <label>
+        Status
+        <input type="text" name="status" placeholder="Open / Mitigating / Closed">
+      </label>
+      <label>
+        Due Date
+        <input type="date" name="due_date">
+      </label>
+    </div>
+    <label>
+      Description
+      <textarea name="description" rows="3" placeholder="Details"></textarea>
+    </label>
+    <button type="submit">Add</button>
+  </form>
+
+  <hr>
+
+  <% Object.keys(grouped).forEach(function(cat) { %>
+    <h2><%= cat %>s</h2>
+    <% if (!grouped[cat] || grouped[cat].length === 0) { %>
+      <p>No entries.</p>
+    <% } else { %>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Owner</th>
+            <th>Status</th>
+            <th>Due Date</th>
+            <th>Created At (UTC)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% grouped[cat].forEach(function(e) { %>
+          <tr>
+            <td><%= e.id %></td>
+            <td><%= e.title %></td>
+            <td><%= e.description %></td>
+            <td><%= e.owner %></td>
+            <td><%= e.status %></td>
+            <td><%= e.due_date %></td>
+            <td><%= e.created_at %></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  <% }); %>
+</body>
+</html>
