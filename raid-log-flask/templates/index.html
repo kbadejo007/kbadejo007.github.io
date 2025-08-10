@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RAID Log</title>
+  <link href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" rel="stylesheet" type="text/css">
+  <style>
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f4f4f4; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  </style>
+</head>
+<body>
+  <div style="display:flex; justify-content: space-between; align-items:center;">
+    <h1>RAID Log</h1>
+    <form method="post" action="/logout">
+      <span>Signed in as {{ current_user }}</span>
+      <button type="submit">Logout</button>
+    </form>
+  </div>
+
+  <p>
+    <a href="/export">Export RAID CSV</a>
+  </p>
+
+  <h2>Add Entry</h2>
+  <form method="post" action="/add">
+    <div class="grid">
+      <label>
+        Category
+        <select name="category" required>
+          {% for c in categories %}
+          <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Title
+        <input type="text" name="title" placeholder="Short summary" required>
+      </label>
+      <label>
+        Owner
+        <input type="text" name="owner" placeholder="Person or team">
+      </label>
+      <label>
+        Status
+        <input type="text" name="status" placeholder="Open / Mitigating / Closed">
+      </label>
+      <label>
+        Due Date
+        <input type="date" name="due_date">
+      </label>
+    </div>
+    <label>
+      Description
+      <textarea name="description" rows="3" placeholder="Details"></textarea>
+    </label>
+    <button type="submit">Add</button>
+  </form>
+
+  <hr>
+
+  {% for cat, items in grouped.items() %}
+    <h2>{{ cat }}s</h2>
+    {% if not items %}
+      <p>No entries.</p>
+    {% else %}
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Owner</th>
+            <th>Status</th>
+            <th>Due Date</th>
+            <th>Created At (UTC)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in items %}
+          <tr>
+            <td>{{ e.id }}</td>
+            <td>{{ e.title }}</td>
+            <td>{{ e.description }}</td>
+            <td>{{ e.owner }}</td>
+            <td>{{ e.status }}</td>
+            <td>{{ e.due_date }}</td>
+            <td>{{ e.created_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  <hr>
+
+  <h1>UAT Checklist</h1>
+  <p>
+    <a href="/uat/export">Export UAT CSV</a>
+  </p>
+
+  <h2>Add UAT Item</h2>
+  <form method="post" action="/uat/add">
+    <div class="grid">
+      <label>
+        Title
+        <input type="text" name="title" placeholder="Test case name" required>
+      </label>
+      <label>
+        Owner
+        <input type="text" name="owner" placeholder="Tester or team">
+      </label>
+      <label>
+        Status
+        <select name="status">
+          {% for s in uat_statuses %}
+          <option value="{{ s }}">{{ s }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Due Date
+        <input type="date" name="due_date">
+      </label>
+    </div>
+    <label>
+      Notes
+      <textarea name="notes" rows="3" placeholder="Steps, expected/actual, blockers..."></textarea>
+    </label>
+    <button type="submit">Add UAT Item</button>
+  </form>
+
+  <h2>UAT Items</h2>
+  {% if not uat_items %}
+    <p>No UAT items.</p>
+  {% else %}
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Owner</th>
+          <th>Status</th>
+          <th>Due Date</th>
+          <th>Notes</th>
+          <th>Created At (UTC)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in uat_items %}
+        <tr>
+          <td>{{ i.id }}</td>
+          <td>{{ i.title }}</td>
+          <td>{{ i.owner }}</td>
+          <td>{{ i.status }}</td>
+          <td>{{ i.due_date }}</td>
+          <td>{{ i.notes }}</td>
+          <td>{{ i.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</body>
+</html>
